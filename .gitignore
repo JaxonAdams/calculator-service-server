@@ -2,3 +2,4 @@
 __pycache__
 
 sql/setup.sql
+sql/seed_user.sql
