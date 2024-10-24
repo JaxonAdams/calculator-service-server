@@ -30,6 +30,7 @@ CREATE TABLE record (
     `amount` SMALLINT NOT NULL,
     `user_balance` DECIMAL(15, 2) NOT NULL,
     `operation_response` JSON NOT NULL,
+    `date` TIMESTAMP NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT `user_id` FOREIGN KEY (`user_id`) REFERENCES `user`.`id` ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT `operation_id` FOREIGN KEY (`operation_id`) REFERENCES `operation`.`id` ON DELETE RESTRICT ON UPDATE CASCADE
