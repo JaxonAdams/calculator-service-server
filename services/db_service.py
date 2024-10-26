@@ -46,3 +46,34 @@ class DBService:
 
         if self.connection:
             self.connection.close()
+
+    def execute_query(self, query, params=None):
+        """Execute a query and return the results."""
+
+        if not self.connection:
+            print("No database connection")
+            return
+
+        with self.connection.cursor() as cursor:
+            try:
+                cursor.execute(query, params)
+                self.connection.commit()
+                result = cursor.fetchall()
+                return result
+            except pymysql.MySQLError as e:
+                print(f"Error executing query: {e}")
+                return
+
+    def fetch_records(self, table, conditions=None):
+        """Fetch records from a specified table with optional conditions."""
+
+        condition_str = ""
+        params = tuple()
+
+        if conditions:
+            condition_str = " WHERE " + " AND ".join(f"{k}=%s" for k in conditions.keys())
+            params = tuple(conditions.values())
+
+        query = f"SELECT * FROM {table}{condition_str}"
+
+        return self.execute_query(query, params)

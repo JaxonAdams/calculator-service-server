@@ -20,7 +20,8 @@ def login():
 
     # TODO: handle actual authentication logic
     with DBService() as db:
-        pass
+        users = db.fetch_records("user")
+        print(users)
 
     token = jwt_service.generate_token(user_id=1)
 
