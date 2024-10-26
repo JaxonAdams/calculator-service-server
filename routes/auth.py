@@ -1,3 +1,4 @@
+from bcrypt import checkpw
 from flask import Blueprint, request, jsonify
 
 from services.db_service import DBService
@@ -27,7 +28,9 @@ def login():
         except IndexError:
             return jsonify({"error": f"User '{username}' not found"}), 404
 
-    print(user)
+    valid_pw = checkpw(password.encode("utf-8"), user["password"].encode("utf-8"))
+    if not valid_pw:
+        return jsonify({"error": "Invalid password"}), 401
 
     token = jwt_service.generate_token(user_id=1)
 
