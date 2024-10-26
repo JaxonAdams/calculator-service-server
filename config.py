@@ -4,3 +4,11 @@ import os
 JWT_SECRET = os.environ["JWT_SECRET"]
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 1
+
+# DATABASE CONNECTION CONFIG
+DB_HOST = os.environ["DB_HOST"]
+DB_USER = os.environ["DB_USER"]
+DB_PASSWORD = os.environ["DB_PASSWORD"]
+
+DB_DATABASE = "calculator_service"
+DB_PORT = 3306
