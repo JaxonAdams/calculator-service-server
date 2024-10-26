@@ -19,7 +19,6 @@ def login():
     except KeyError as e:
         return jsonify({"error": f"Field {e} is required."}), 409
 
-    # TODO: handle actual authentication logic
     with DBService() as db:
         users = db.fetch_records("user", conditions={"username": username})
 
