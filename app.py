@@ -1,8 +1,26 @@
+import os
+
+from flask_cors import CORS
 from flask import Flask, jsonify
 
 from routes import Router
 
 app = Flask(__name__)
+
+cors_origins_str = os.environ.get("CORS_ORIGINS")
+if cors_origins_str:
+    cors_origins = cors_origins_str.split(",")
+else:
+    cors_origins = ["*"]
+
+print(f"CORS ORIGINS: {cors_origins}")
+
+CORS(
+    app,
+    origins=cors_origins,
+    allow_headers=["Content-Type", "Authorization"],
+    methods=["GET", "POST", "OPTIONS"],
+)
 
 router = Router(app)
 router.init()
