@@ -31,6 +31,6 @@ def login():
     if not valid_pw:
         return jsonify({"error": "Invalid password"}), 401
 
-    token = jwt_service.generate_token(user_id=1)
+    token = jwt_service.generate_token(user_id=int(user["id"]))
 
     return jsonify({"logged_in": True, "token": token}), 200
