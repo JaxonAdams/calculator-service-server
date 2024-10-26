@@ -20,8 +20,14 @@ def login():
 
     # TODO: handle actual authentication logic
     with DBService() as db:
-        users = db.fetch_records("user")
-        print(users)
+        users = db.fetch_records("user", conditions={"username": username})
+
+        try:
+            user = users[0]
+        except IndexError:
+            return jsonify({"error": f"User '{username}' not found"}), 404
+
+    print(user)
 
     token = jwt_service.generate_token(user_id=1)
 
