@@ -28,7 +28,7 @@ def test_login_success(mock_generate_token, mock_checkpw, mock_db_service, clien
 
     # perform a login request
     response = client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         json={"username": "user", "password": "password"},
     )
 
@@ -45,7 +45,7 @@ def test_login_invalid_user(mock_db_service, client):
     mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = []
 
     response = client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         json={"username": "notauser", "password": "password"},
     )
 
@@ -65,7 +65,7 @@ def test_login_invalid_password(mock_checkpw, mock_db_service, client):
     mock_checkpw.return_value = False
 
     response = client.post(
-        "/auth/login", json={"username": "user", "password": "invalid_password"}
+        "/api/v1/auth/login", json={"username": "user", "password": "invalid_password"}
     )
 
     assert response.status_code == 401
@@ -79,7 +79,7 @@ def test_login_missing_fields(mock_db_service, client):
 
     # missing both fields
     response = client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         json={},
     )
     assert response.status_code == 409

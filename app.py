@@ -13,8 +13,6 @@ if cors_origins_str:
 else:
     cors_origins = ["*"]
 
-print(f"CORS ORIGINS: {cors_origins}")
-
 CORS(
     app,
     origins=cors_origins,
@@ -24,11 +22,6 @@ CORS(
 
 router = Router(app)
 router.init()
-
-
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
 
 
 # TODO: move error methods to a place that makes more sense

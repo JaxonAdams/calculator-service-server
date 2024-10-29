@@ -11,4 +11,4 @@ class Router:
         # register routes
 
         # auth-related routes
-        self.flask_app.register_blueprint(auth_bp, url_prefix="/auth")
+        self.flask_app.register_blueprint(auth_bp, url_prefix="/api/v1/auth")
