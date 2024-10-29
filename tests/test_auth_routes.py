@@ -37,3 +37,38 @@ def test_login_success(mock_generate_token, mock_checkpw, mock_db_service, clien
     json_data = response.get_json()
     assert json_data == {"logged_in": True, "token": "mocked_token"}
     mock_checkpw.assert_called_once_with(b"password", b"$2b$12$somethinghashed")
+
+
+@patch("routes.auth.DBService")
+def test_login_invalid_user(mock_db_service, client):
+
+    mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = []
+
+    response = client.post(
+        "/auth/login",
+        json={"username": "notauser", "password": "password"},
+    )
+
+    assert response.status_code == 404
+    json_data = response.get_json()
+    assert json_data == {"error": "User 'notauser' not found"}
+
+
+@patch("routes.auth.DBService")
+@patch("routes.auth.checkpw")
+def test_login_invalid_password(mock_checkpw, mock_db_service, client):
+
+    mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = [
+        {"id": 1, "username": "user", "password": "$2b$12$somethinghashed"}
+    ]
+
+    mock_checkpw.return_value = False
+
+    response = client.post(
+        "/auth/login", json={"username": "user", "password": "invalid_password"}
+    )
+
+    assert response.status_code == 401
+    json_data = response.get_json()
+    assert json_data == {"error": "Invalid password"}
+    mock_checkpw.assert_called_once_with(b"invalid_password", b"$2b$12$somethinghashed")
