@@ -87,14 +87,14 @@ def test_login_missing_fields(mock_db_service, client):
 
     # missing username
     response = client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         json={"password": "password"},
     )
     assert response.status_code == 409
     assert response.get_json() == {"error": "Field 'username' is required."}
 
     response = client.post(
-        "/auth/login",
+        "/api/v1/auth/login",
         json={"username": "user"},
     )
     assert response.status_code == 409
