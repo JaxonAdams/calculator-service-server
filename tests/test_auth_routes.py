@@ -72,3 +72,30 @@ def test_login_invalid_password(mock_checkpw, mock_db_service, client):
     json_data = response.get_json()
     assert json_data == {"error": "Invalid password"}
     mock_checkpw.assert_called_once_with(b"invalid_password", b"$2b$12$somethinghashed")
+
+
+@patch("routes.auth.DBService")
+def test_login_missing_fields(mock_db_service, client):
+
+    # missing both fields
+    response = client.post(
+        "/auth/login",
+        json={},
+    )
+    assert response.status_code == 409
+    assert response.get_json() == {"error": "Field 'username' is required."}
+
+    # missing username
+    response = client.post(
+        "/auth/login",
+        json={"password": "password"},
+    )
+    assert response.status_code == 409
+    assert response.get_json() == {"error": "Field 'username' is required."}
+
+    response = client.post(
+        "/auth/login",
+        json={"username": "user"},
+    )
+    assert response.status_code == 409
+    assert response.get_json() == {"error": "Field 'password' is required."}
