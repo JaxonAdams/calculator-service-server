@@ -13,7 +13,11 @@ operation_bp = Blueprint("operation", __name__)
 def manage_operations():
     if request.method == "GET":
         with DBService() as db:
-            ops = db.fetch_records("operation")
+            ops = db.fetch_records(
+                "operation",
+                fields=["id", "type", "cost"],
+                conditions={"deleted": 0},
+            )
 
         return jsonify({"results": ops}), 200
     elif request.method == "POST":

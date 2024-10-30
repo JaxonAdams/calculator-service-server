@@ -67,7 +67,7 @@ class DBService:
     def insert_record(self, table, data):
         """Insert a record into the given table with the data provided."""
 
-        columns = ", ".join(data.keys())
+        columns = ", ".join(f"`{k}`" for k in data.keys())
         placeholders = ", ".join(["%s"] * len(data))
         sql = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
 
@@ -77,7 +77,7 @@ class DBService:
 
             return cursor.lastrowid
 
-    def fetch_records(self, table, conditions=None):
+    def fetch_records(self, table, fields=["*"], conditions=None):
         """Fetch records from a specified table with optional conditions."""
 
         condition_str = ""
@@ -89,6 +89,8 @@ class DBService:
             )
             params = tuple(conditions.values())
 
-        query = f"SELECT * FROM {table}{condition_str}"
+        fields_str = ", ".join(f"`{f}`" for f in fields)
+
+        query = f"SELECT {fields_str} FROM {table}{condition_str}"
 
         return self.execute_query(query, params)
