@@ -19,6 +19,33 @@ def auth_header():
     return {"Authorization": f"Bearer {token}"}
 
 
+def test_get_operations_no_auth(client):
+
+    response = client.get("/api/v1/operations")
+
+    assert response.status_code == 401
+    json_data = response.get_json()
+    assert json_data == {"error": "Missing or invalid authorization header"}
+
+
+def test_get_operations_invalid_auth(client):
+
+    invalid_auth = {"Authorization": "Bearer not-a-jwt"}
+    response = client.get("/api/v1/operations", headers=invalid_auth)
+
+    assert response.status_code == 401
+    json_data = response.get_json()
+    assert json_data == {"error": "Invalid token"}
+
+    expired_token = JWTService(expiration_hours=-1).generate_token(user_id=1)
+    expired_auth = {"Authorization": f"Bearer {expired_token}"}
+    response = client.get("/api/v1/operations", headers=expired_auth)
+
+    assert response.status_code == 401
+    json_data = response.get_json()
+    assert json_data == {"error": "Token has expired"}
+
+
 @patch("routes.operation.DBService")
 def test_get_operations(mock_db_service, client, auth_header):
 

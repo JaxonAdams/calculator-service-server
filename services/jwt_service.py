@@ -41,7 +41,7 @@ def jwt_required(f):
     def wrapper(*args, **kwargs):
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
-            return jsonify({"error": "Mising or invalid authorization header"}), 401
+            return jsonify({"error": "Missing or invalid authorization header"}), 401
 
         token = auth_header.split(" ")[1]
 
