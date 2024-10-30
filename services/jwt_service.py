@@ -50,3 +50,5 @@ def jwt_required(f):
             return jsonify(decoded), 401
 
         return f(*args, **kwargs)
+
+    return wrapper
