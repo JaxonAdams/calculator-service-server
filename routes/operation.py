@@ -34,17 +34,38 @@ def manage_operations():
         return jsonify({"id": op_id, "type": op_type, "cost": cost}), 201
 
 
-@operation_bp.route("/<int:operation_id>", methods=["GET"])
+@operation_bp.route("/<int:operation_id>", methods=["GET", "PUT"])
 @jwt_required
 def manage_single_operation(operation_id):
-    with DBService() as db:
-        ops = db.fetch_records(
-            "operation",
-            fields=["id", "type", "cost"],
-            conditions={"id": operation_id},
-        )
+    if request.method == "GET":
+        with DBService() as db:
+            ops = db.fetch_records(
+                "operation",
+                fields=["id", "type", "cost"],
+                conditions={"id": operation_id},
+            )
 
-    try:
-        return jsonify(ops[0]), 200
-    except IndexError:
-        return jsonify({"error": f"Operation with ID {operation_id} not found"}), 404
+        try:
+            return jsonify(ops[0]), 200
+        except IndexError:
+            return (
+                jsonify({"error": f"Operation with ID {operation_id} not found"}),
+                404,
+            )
+    elif request.method == "PUT":
+        data = request.get_json()
+
+        with DBService() as db:
+            db.update_record(
+                "operation",
+                data,
+                operation_id,
+            )
+
+            updated_ops = db.fetch_records(
+                "operation",
+                fields=["id", "type", "cost"],
+                conditions={"deleted": 0, "id": operation_id},
+            )
+
+        return jsonify(updated_ops[0]), 200

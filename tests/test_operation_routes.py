@@ -176,13 +176,13 @@ def test_update_operation(mock_db_service, client, auth_header):
 
     mock_db_service.return_value.__enter__.return_value.update_record.return_value = 3
     mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = [
-        {"id": 3, "type": "multiplication", "cost": 0.25},
+        {"id": 3, "type": "multiplication", "cost": 0.99},
     ]
 
     operation_data = {"cost": 0.99}
 
     response = client.put(
-        "/api/v1/operation/3",
+        "/api/v1/operations/3",
         json=operation_data,
         headers=auth_header,
     )
