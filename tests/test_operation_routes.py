@@ -174,7 +174,7 @@ def test_create_op_is_protected(client):
 @patch("routes.operation.DBService")
 def test_update_operation(mock_db_service, client, auth_header):
 
-    mock_db_service.return_value.__enter__.return_value.update_record.return_value = 3
+    mock_db_service.return_value.__enter__.return_value.update_record.return_value = 1
     mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = [
         {"id": 3, "type": "multiplication", "cost": 0.99},
     ]
@@ -216,3 +216,17 @@ def test_update_op_no_fields_provided(client, auth_header):
 
     assert response.status_code == 400
     assert response.get_json() == {"error": "You must specify a field to update."}
+
+
+@patch("routes.operation.DBService")
+def test_delete_op(mock_db_service, client, auth_header):
+
+    mock_db_service.return_value.__enter__.return_value.update_record.return_value = 1
+
+    response = client.delete(
+        "/api/v1/operations/3",
+        headers=auth_header,
+    )
+
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "Operation with ID 3 was deleted."}
