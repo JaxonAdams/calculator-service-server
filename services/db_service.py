@@ -6,13 +6,13 @@ from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_DATABASE
 class DBService:
 
     def __init__(self):
-        
+
         self.host = DB_HOST
         self.port = DB_PORT
         self.user = DB_USER
         self.password = DB_PASSWORD
         self.db = DB_DATABASE
-        
+
         self.connection = None
 
     def __enter__(self):
@@ -64,6 +64,19 @@ class DBService:
                 print(f"Error executing query: {e}")
                 return
 
+    def insert_record(self, table, data):
+        """Insert a record into the given table with the data provided."""
+
+        columns = ", ".join(data.keys())
+        placeholders = ", ".join(["%s"] * len(data))
+        sql = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
+
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql, tuple(data.values()))
+            self.connection.commit()
+
+            return cursor.lastrowid
+
     def fetch_records(self, table, conditions=None):
         """Fetch records from a specified table with optional conditions."""
 
@@ -71,7 +84,9 @@ class DBService:
         params = tuple()
 
         if conditions:
-            condition_str = " WHERE " + " AND ".join(f"{k}=%s" for k in conditions.keys())
+            condition_str = " WHERE " + " AND ".join(
+                f"{k}=%s" for k in conditions.keys()
+            )
             params = tuple(conditions.values())
 
         query = f"SELECT * FROM {table}{condition_str}"
