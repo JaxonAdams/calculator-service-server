@@ -1,3 +1,4 @@
+import pymysql
 from flask import Blueprint, jsonify, request
 
 from services.db_service import DBService
@@ -55,12 +56,18 @@ def manage_single_operation(operation_id):
     elif request.method == "PUT":
         data = request.get_json()
 
+        if not len(data):  # no fields provided
+            return jsonify({"error": "You must specify a field to update."}), 400
+
         with DBService() as db:
-            db.update_record(
-                "operation",
-                data,
-                operation_id,
-            )
+            try:
+                db.update_record(
+                    "operation",
+                    data,
+                    operation_id,
+                )
+            except pymysql.MySQLError as e:
+                return jsonify({"error": e.args[1]}), 400
 
             updated_ops = db.fetch_records(
                 "operation",
