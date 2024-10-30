@@ -67,3 +67,37 @@ def test_get_operations(mock_db_service, client, auth_header):
     assert response.status_code == 200
     json_data = response.get_json()
     assert json_data == {"results": mock_operations}
+
+
+@patch("routes.operation.DBService")
+def test_get_op_by_id(mock_db_service, client, auth_header):
+
+    mock_operation = {"id": 5, "type": "square_root", "cost": 0.75}
+
+    mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = [
+        mock_operation
+    ]
+
+    response = client.get("/api/v1/operations/5", headers=auth_header)
+
+    assert response.status_code == 200
+    json_data = response.get_json()
+    assert json_data == mock_operation
+
+
+@patch("routes.operation.DBService")
+def test_get_op_by_id_not_found(mock_db_service, client, auth_header):
+
+    mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = []
+
+    response = client.get("/api/v1/operations/999", headers=auth_header)
+
+    assert response.status_code == 404
+    json_data = response.get_json()
+    assert json_data == {"error": "Operation with ID 999 not found"}
+
+
+def test_get_op_by_id_is_protected(client):
+
+    response = client.get("/api/v1/operations/1")
+    assert response.status_code == 401
