@@ -101,3 +101,25 @@ def test_get_op_by_id_is_protected(client):
 
     response = client.get("/api/v1/operations/1")
     assert response.status_code == 401
+
+
+@patch("routes.operation.DBService")
+def test_create_operation(mock_db_service, client, auth_header):
+
+    mock_db_service.return_value.__enter__.return_value.insert_record.return_value = 1
+
+    item_data = {"type": "modulo", "cost": 0.35}
+
+    response = client.post(
+        "/api/v1/operations",
+        json=item_data,
+        headers=auth_header,
+    )
+
+    assert response.status_code == 201
+    json_data = response.get_json()
+    assert json_data == item_data | {"id": 1}
+
+    mock_db_service.return_value.__enter__.return_value.insert_record.assert_called_once_with(
+        "operation", item_data
+    )
