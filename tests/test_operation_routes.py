@@ -28,7 +28,7 @@ def test_get_operations(mock_db_service, client):
         mock_operations
     )
 
-    response = client.post("/api/v1/operations")
+    response = client.get("/api/v1/operations")
 
     assert response.status_code == 200
     json_data = response.get_json()
