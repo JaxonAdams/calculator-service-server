@@ -22,7 +22,7 @@ def manage_operations():
             op_type = data["type"]
             cost = data["cost"]
         except KeyError as e:
-            return jsonify({"error": f"Field '{e}' is required"}), 400
+            return jsonify({"error": f"Field {e} is required"}), 400
 
         with DBService() as db:
             op_id = db.insert_record("operation", {"type": op_type, "cost": cost})

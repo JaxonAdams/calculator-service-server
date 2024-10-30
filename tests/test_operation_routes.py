@@ -123,3 +123,49 @@ def test_create_operation(mock_db_service, client, auth_header):
     mock_db_service.return_value.__enter__.return_value.insert_record.assert_called_once_with(
         "operation", item_data
     )
+
+
+@patch("routes.operation.DBService")
+def test_create_op_missing_fields(mock_db_service, client, auth_header):
+
+    item_data = {"cost": 0.35}
+    response = client.post(
+        "/api/v1/operations",
+        json=item_data,
+        headers=auth_header,
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "Field 'type' is required"}
+
+    item_data = {"type": "modulo"}
+    response = client.post(
+        "/api/v1/operations",
+        json=item_data,
+        headers=auth_header,
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "Field 'cost' is required"}
+
+    item_data = {}
+    response = client.post(
+        "/api/v1/operations",
+        json=item_data,
+        headers=auth_header,
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "Field 'type' is required"}
+
+
+def test_create_op_is_protected(client):
+
+    item_data = {"type": "modulo", "cost": 0.35}
+
+    response = client.post(
+        "/api/v1/operations",
+        json=item_data,
+    )
+
+    assert response.status_code == 401
