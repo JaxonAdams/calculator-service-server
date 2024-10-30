@@ -222,6 +222,9 @@ def test_update_op_no_fields_provided(client, auth_header):
 def test_delete_op(mock_db_service, client, auth_header):
 
     mock_db_service.return_value.__enter__.return_value.update_record.return_value = 1
+    mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = [
+        {"id": 3, "type": "multiplication", "cost": 0.1, "deleted": 1}
+    ]
 
     response = client.delete(
         "/api/v1/operations/3",
