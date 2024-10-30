@@ -18,8 +18,9 @@ CREATE TABLE `user` (
 -- operation stores a calculator operation (e.g. addition, subtraction)
 CREATE TABLE operation (
     `id` MEDIUMINT NOT NULL AUTO_INCREMENT,
-    `type` ENUM('addition', 'subtraction', 'multiplication', 'division', 'square_root', 'random_string') NOT NULL,
+    `type` VARCHAR(32) UNIQUE NOT NULL,
     `cost` DECIMAL(15, 2) NOT NULL,
+    `deleted` BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (id)
 );
 
@@ -32,6 +33,7 @@ CREATE TABLE record (
     `user_balance` DECIMAL(15, 2) NOT NULL,
     `operation_response` JSON NOT NULL,
     `date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted` BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (id),
     CONSTRAINT `user_id` FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT `operation_id` FOREIGN KEY (`operation_id`) REFERENCES `operation`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE

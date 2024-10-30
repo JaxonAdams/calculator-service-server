@@ -1,4 +1,5 @@
 from routes.auth import auth_bp
+from routes.operation import operation_bp
 
 
 class Router:
@@ -12,3 +13,6 @@ class Router:
 
         # auth-related routes
         self.flask_app.register_blueprint(auth_bp, url_prefix="/api/v1/auth")
+
+        # resource routes
+        self.flask_app.register_blueprint(operation_bp, url_prefix="/api/v1/operations")

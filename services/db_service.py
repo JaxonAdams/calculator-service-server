@@ -6,13 +6,13 @@ from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_DATABASE
 class DBService:
 
     def __init__(self):
-        
+
         self.host = DB_HOST
         self.port = DB_PORT
         self.user = DB_USER
         self.password = DB_PASSWORD
         self.db = DB_DATABASE
-        
+
         self.connection = None
 
     def __enter__(self):
@@ -64,16 +64,47 @@ class DBService:
                 print(f"Error executing query: {e}")
                 return
 
-    def fetch_records(self, table, conditions=None):
+    def insert_record(self, table, data):
+        """Insert a record into the given table with the data provided."""
+
+        columns = ", ".join(f"`{k}`" for k in data.keys())
+        placeholders = ", ".join(["%s"] * len(data))
+        sql = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
+
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql, tuple(data.values()))
+            self.connection.commit()
+
+            return cursor.lastrowid
+
+    def update_record(self, table, data, record_id):
+        """Update the requested record with the data provided."""
+
+        set_str = ", ".join(f"{key} = %s" for key in data.keys())
+        sql = f"UPDATE {table} SET {set_str} WHERE id = %s"
+
+        params = tuple(data.values()) + (record_id,)
+
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql, params)
+            self.connection.commit()
+
+            return cursor.lastrowid
+
+    def fetch_records(self, table, fields=["*"], conditions=None):
         """Fetch records from a specified table with optional conditions."""
 
         condition_str = ""
         params = tuple()
 
         if conditions:
-            condition_str = " WHERE " + " AND ".join(f"{k}=%s" for k in conditions.keys())
+            condition_str = " WHERE " + " AND ".join(
+                f"{k}=%s" for k in conditions.keys()
+            )
             params = tuple(conditions.values())
 
-        query = f"SELECT * FROM {table}{condition_str}"
+        fields_str = ", ".join(f"`{f}`" if f != "*" else f for f in fields)
+
+        query = f"SELECT {fields_str} FROM {table}{condition_str}"
 
         return self.execute_query(query, params)
