@@ -190,3 +190,29 @@ def test_update_operation(mock_db_service, client, auth_header):
     assert response.status_code == 200
     json_data = response.get_json()
     assert json_data == {"id": 3, "type": "multiplication", "cost": 0.99}
+
+
+def test_update_op_is_protected(client):
+
+    operation_data = {"cost": 0.99}
+
+    response = client.put(
+        "/api/v1/operations/3",
+        json=operation_data,
+    )
+
+    assert response.status_code == 401
+
+
+def test_update_op_no_fields_provided(client, auth_header):
+
+    operation_data = {}
+
+    response = client.put(
+        "/api/v1/operations/3",
+        json=operation_data,
+        headers=auth_header,
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "You must specify a field to update."}
