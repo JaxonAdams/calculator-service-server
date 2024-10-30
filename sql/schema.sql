@@ -18,7 +18,7 @@ CREATE TABLE `user` (
 -- operation stores a calculator operation (e.g. addition, subtraction)
 CREATE TABLE operation (
     `id` MEDIUMINT NOT NULL AUTO_INCREMENT,
-    `type` VARCHAR(32) NOT NULL,
+    `type` VARCHAR(32) UNIQUE NOT NULL,
     `cost` DECIMAL(15, 2) NOT NULL,
     `deleted` BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (id)

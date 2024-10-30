@@ -77,6 +77,20 @@ class DBService:
 
             return cursor.lastrowid
 
+    def update_record(self, table, data, record_id):
+        """Update the requested record with the data provided."""
+
+        set_str = ", ".join(f"{key} = %s" for key in data.keys())
+        sql = f"UPDATE {table} SET {set_str} WHERE id = %s"
+
+        params = tuple(data.values()) + (record_id,)
+
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql, params)
+            self.connection.commit()
+
+            return cursor.lastrowid
+
     def fetch_records(self, table, fields=["*"], conditions=None):
         """Fetch records from a specified table with optional conditions."""
 
@@ -89,7 +103,7 @@ class DBService:
             )
             params = tuple(conditions.values())
 
-        fields_str = ", ".join(f"`{f}`" for f in fields)
+        fields_str = ", ".join(f"`{f}`" if f != "*" else f for f in fields)
 
         query = f"SELECT {fields_str} FROM {table}{condition_str}"
 

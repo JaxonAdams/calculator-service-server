@@ -40,6 +40,7 @@ def manage_single_operation(operation_id):
     with DBService() as db:
         ops = db.fetch_records(
             "operation",
+            fields=["id", "type", "cost"],
             conditions={"id": operation_id},
         )
 

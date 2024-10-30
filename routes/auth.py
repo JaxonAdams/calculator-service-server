@@ -20,7 +20,10 @@ def login():
         return jsonify({"error": f"Field {e} is required."}), 409
 
     with DBService() as db:
-        users = db.fetch_records("user", conditions={"username": username})
+        users = db.fetch_records(
+            "user",
+            conditions={"username": username},
+        )
 
         try:
             user = users[0]
