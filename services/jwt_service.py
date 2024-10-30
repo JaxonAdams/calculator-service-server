@@ -1,6 +1,8 @@
+import functools
 from datetime import datetime, timedelta
 
 import jwt
+from flask import request, jsonify
 
 from config import JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRATION_HOURS
 
@@ -32,3 +34,19 @@ class JWTService:
             return {"error": "Token has expired"}
         except jwt.InvalidTokenError:
             return {"error": "Invalid token"}
+
+
+def jwt_required(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return jsonify({"error": "Mising or invalid authorization header"}), 401
+
+        token = auth_header.split(" ")[1]
+
+        decoded = JWTService().verify_token(token)
+        if "error" in decoded:
+            return jsonify(decoded), 401
+
+        return f(*args, **kwargs)
