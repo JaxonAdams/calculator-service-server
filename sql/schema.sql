@@ -5,6 +5,7 @@ USE calculator_service;
 DROP TABLE IF EXISTS record;
 DROP TABLE IF EXISTS `user`;
 DROP TABLE IF EXISTS operation;
+DROP TABLE IF EXISTS admin_key;
 
 -- user stores users with their login information
 CREATE TABLE `user` (
@@ -37,4 +38,15 @@ CREATE TABLE record (
     PRIMARY KEY (id),
     CONSTRAINT `user_id` FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT `operation_id` FOREIGN KEY (`operation_id`) REFERENCES `operation`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- admin_key stores administrator API keys
+CREATE TABLE admin_key (
+    `id` MEDIUMINT NOT NULL AUTO_INCREMENT,
+    `api_key` VARCHAR(255) NOT NULL UNIQUE,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `created_by` VARCHAR(255),
+    `description` VARCHAR(255),
+    `deleted` BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (id)
 );
