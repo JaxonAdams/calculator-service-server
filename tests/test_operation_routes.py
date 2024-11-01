@@ -19,6 +19,17 @@ def auth_header():
     return {"Authorization": f"Bearer {token}"}
 
 
+@pytest.fixture
+def admin_auth_header():
+
+    token = JWTService().generate_admin_token(
+        "UNIT TEST SUITE",
+        "FAKE TOKEN FOR UNIT TESTING",
+    )
+
+    return {"Authorization": f"Bearer {token}"}
+
+
 def test_get_operations_no_auth(client):
 
     response = client.get("/api/v1/operations")
@@ -104,35 +115,51 @@ def test_get_op_by_id_is_protected(client):
 
 
 @patch("routes.operation.DBService")
-def test_create_operation(mock_db_service, client, auth_header):
+@patch("services.jwt_service.DBService")
+def test_create_operation(
+    jwt_mock_db_service,
+    routes_mock_db_service,
+    client,
+    admin_auth_header,
+):
 
-    mock_db_service.return_value.__enter__.return_value.insert_record.return_value = 1
+    jwt_mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = [
+        {"api_key": "valid_api_key"}
+    ]
+
+    routes_mock_db_service.return_value.__enter__.return_value.insert_record.return_value = (
+        1
+    )
 
     operation_data = {"type": "modulo", "cost": 0.35}
 
     response = client.post(
         "/api/v1/operations",
         json=operation_data,
-        headers=auth_header,
+        headers=admin_auth_header,
     )
 
     assert response.status_code == 201
     json_data = response.get_json()
     assert json_data == operation_data | {"id": 1}
 
-    mock_db_service.return_value.__enter__.return_value.insert_record.assert_called_once_with(
+    routes_mock_db_service.return_value.__enter__.return_value.insert_record.assert_called_once_with(
         "operation", operation_data
     )
 
 
-@patch("routes.operation.DBService")
-def test_create_op_missing_fields(mock_db_service, client, auth_header):
+@patch("services.jwt_service.DBService")
+def test_create_op_missing_fields(jwt_mock_db_service, client, admin_auth_header):
+
+    jwt_mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = [
+        {"api_key": "valid_api_key"}
+    ]
 
     operation_data = {"cost": 0.35}
     response = client.post(
         "/api/v1/operations",
         json=operation_data,
-        headers=auth_header,
+        headers=admin_auth_header,
     )
 
     assert response.status_code == 400
@@ -142,7 +169,7 @@ def test_create_op_missing_fields(mock_db_service, client, auth_header):
     response = client.post(
         "/api/v1/operations",
         json=operation_data,
-        headers=auth_header,
+        headers=admin_auth_header,
     )
 
     assert response.status_code == 400
@@ -152,7 +179,7 @@ def test_create_op_missing_fields(mock_db_service, client, auth_header):
     response = client.post(
         "/api/v1/operations",
         json=operation_data,
-        headers=auth_header,
+        headers=admin_auth_header,
     )
 
     assert response.status_code == 400
@@ -172,10 +199,22 @@ def test_create_op_is_protected(client):
 
 
 @patch("routes.operation.DBService")
-def test_update_operation(mock_db_service, client, auth_header):
+@patch("services.jwt_service.DBService")
+def test_update_operation(
+    jwt_mock_db_service,
+    routes_mock_db_service,
+    client,
+    admin_auth_header,
+):
 
-    mock_db_service.return_value.__enter__.return_value.update_record.return_value = 1
-    mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = [
+    jwt_mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = [
+        {"api_key": "valid_api_key"}
+    ]
+
+    routes_mock_db_service.return_value.__enter__.return_value.update_record.return_value = (
+        1
+    )
+    routes_mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = [
         {"id": 3, "type": "multiplication", "cost": 0.99},
     ]
 
@@ -184,7 +223,7 @@ def test_update_operation(mock_db_service, client, auth_header):
     response = client.put(
         "/api/v1/operations/3",
         json=operation_data,
-        headers=auth_header,
+        headers=admin_auth_header,
     )
 
     assert response.status_code == 200
@@ -204,14 +243,19 @@ def test_update_op_is_protected(client):
     assert response.status_code == 401
 
 
-def test_update_op_no_fields_provided(client, auth_header):
+@patch("services.jwt_service.DBService")
+def test_update_op_no_fields_provided(jwt_mock_db_service, client, admin_auth_header):
+
+    jwt_mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = [
+        {"api_key": "valid_api_key"}
+    ]
 
     operation_data = {}
 
     response = client.put(
         "/api/v1/operations/3",
         json=operation_data,
-        headers=auth_header,
+        headers=admin_auth_header,
     )
 
     assert response.status_code == 400
@@ -219,16 +263,30 @@ def test_update_op_no_fields_provided(client, auth_header):
 
 
 @patch("routes.operation.DBService")
-def test_delete_op(mock_db_service, client, auth_header):
+@patch("services.jwt_service.DBService")
+def test_delete_op(
+    jwt_mock_db_service,
+    routes_mock_db_service,
+    client,
+    admin_auth_header,
+):
 
-    mock_db_service.return_value.__enter__.return_value.update_record.return_value = 1
-    mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = [
-        {"id": 3, "type": "multiplication", "cost": 0.1, "deleted": 1}
+    jwt_mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = [
+        {"api_key": "valid_api_key"}
     ]
+
+    mock_db = routes_mock_db_service.return_value.__enter__.return_value
+
+    mock_db.fetch_records.side_effect = [
+        [{"id": 3, "type": "multiplication", "cost": 0.1, "deleted": 0}],
+        [{"id": 3, "type": "multiplication", "cost": 0.1, "deleted": 1}],
+    ]
+
+    mock_db.update_record.return_value = 1
 
     response = client.delete(
         "/api/v1/operations/3",
-        headers=auth_header,
+        headers=admin_auth_header,
     )
 
     assert response.status_code == 200

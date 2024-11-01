@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import jwt
 from flask import request, jsonify
 
-from db_service import DBService
+from services.db_service import DBService
 from config import JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRATION_HOURS
 
 
@@ -78,7 +78,7 @@ def admin_protected(f):
         if "error" in decoded:
             return jsonify(decoded), 401
 
-        if "role" not in token or token["role"] != "admin":
+        if "role" not in decoded or decoded["role"] != "admin":
             return (
                 jsonify(
                     {
