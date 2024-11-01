@@ -27,6 +27,16 @@ class JWTService:
 
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 
+    def generate_admin_token(self, created_by, description):
+
+        payload = {
+            "role": "admin",
+            "created_by": created_by,
+            "description": description,
+        }
+
+        return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
+
     def verify_token(self, token):
         try:
             return jwt.decode(token, self.secret_key, algorithms=[self.algorithm])

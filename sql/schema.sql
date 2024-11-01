@@ -5,6 +5,7 @@ USE calculator_service;
 DROP TABLE IF EXISTS record;
 DROP TABLE IF EXISTS `user`;
 DROP TABLE IF EXISTS operation;
+DROP TABLE IF EXISTS admin_key;
 
 -- user stores users with their login information
 CREATE TABLE `user` (
@@ -42,7 +43,7 @@ CREATE TABLE record (
 -- admin_key stores administrator API keys
 CREATE TABLE admin_key (
     `id` MEDIUMINT NOT NULL AUTO_INCREMENT,
-    `api_key` VARCHAR(64) NOT NULL UNIQUE,
+    `api_key` VARCHAR(255) NOT NULL UNIQUE,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `created_by` VARCHAR(255),
     `description` VARCHAR(255),
