@@ -28,10 +28,37 @@ def test_get_previous_calculations_is_protected(client):
     assert response.get_json() == {"error": "Missing or invalid authorization header"}
 
 
-@patch("routes.calculations.DBService")
+@patch("routes.calculation.DBService")
 def test_get_previous_calculations(mock_db_service, client, auth_header):
 
     mock_calculations = [
+        {
+            "id": 2,
+            "operation_id": 3,
+            "operation_type": "multiplication",
+            "operation_cost": "0.25",
+            "user_id": 1,
+            "username": "test.user@example.com",
+            "user_status": "active",
+            "calculation": json.dumps({"operation": "multiplication", "operands": [2, 2, 3], "result": 12}),
+            "user_balance": "24.65",
+            "date": "2024-11-02 12:45:00"
+        },
+        {
+            "id": 1,
+            "operation_id": 1,
+            "operation_type": "addition",
+            "operation_cost": "0.1",
+            "user_id": 1,
+            "username": "test.user@example.com",
+            "user_status": "active",
+            "calculation": json.dumps({"operation": "addition", "operands": [21, 21], "result": 42}),
+            "user_balance": "24.9",
+            "date": "2024-11-02 12:42:00"
+        },
+    ]
+
+    formatted_results = [
         {
             "id": 2,
             "operation": {
@@ -44,8 +71,7 @@ def test_get_previous_calculations(mock_db_service, client, auth_header):
                 "username": "test.user@example.com",
                 "status": "active",
             },
-            "amount": 1,
-            "calculation": json.dumps({"operation": "multiplication", "operands": [2, 2, 3], "result": 12}),
+            "calculation": {"operation": "multiplication", "operands": [2, 2, 3], "result": 12},
             "user_balance": "24.65",
             "date": "2024-11-02 12:45:00"
         },
@@ -61,14 +87,13 @@ def test_get_previous_calculations(mock_db_service, client, auth_header):
                 "username": "test.user@example.com",
                 "status": "active",
             },
-            "amount": 1,
-            "calculation": json.dumps({"operation": "addition", "operands": [21, 21], "result": 42}),
+            "calculation": {"operation": "addition", "operands": [21, 21], "result": 42},
             "user_balance": "24.9",
             "date": "2024-11-02 12:42:00"
         },
     ]
 
-    mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = (
+    mock_db_service.return_value.__enter__.return_value.execute_query.return_value = (
         mock_calculations
     )
 
@@ -76,6 +101,6 @@ def test_get_previous_calculations(mock_db_service, client, auth_header):
 
     assert response.status_code == 200
     json_data = response.get_json()
-    assert json_data == {"results": mock_calculations}
+    assert json_data == {"results": formatted_results}
 
 
