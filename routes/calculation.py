@@ -135,7 +135,7 @@ def run_calculation():
                 "operation_id": op_info["id"],
                 "user_id": user_id,
                 "amount": 1,
-                "user_balance": user_balance,
+                "user_balance": user_balance,  # TODO: DECREMENT BALANCE!!
                 "operation_response": json.dumps(response_data),
             }
         )
