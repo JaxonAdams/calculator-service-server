@@ -104,3 +104,39 @@ def test_get_previous_calculations(mock_db_service, client, auth_header):
     assert json_data == {"results": formatted_results}
 
 
+def test_run_calculation_is_protected(client):
+
+    calculation_request = {
+        "operation": "addition",
+        "operands": [1, 3, 2],
+    }
+
+    response = client.post(
+        "/api/v1/calculations/new",
+        json=calculation_request,
+    )
+
+    assert response.status_code == 401
+    assert response.get_json() == {"error": "Missing or invalid authorization header"}
+
+
+@patch("routes.calculation.DBService")
+def test_run_calculation(mock_db_service, client, auth_header):
+
+    mock_db = mock_db_service.return_value.__enter__.return_value
+
+    mock_db.insert_record.return_value = 1  # new record ID
+
+    calculation_request = {
+        "operation": "addition",
+        "operands": [1, 3, 2],
+    }
+
+    response = client.post(
+        "/api/v1/calculations/new",
+        json=calculation_request,
+    )
+
+    assert response.status_code == 200
+    json_data = response.get_json()
+    assert json_data == {"operation": "addition", "operands": [1, 3, 2], "result": 6}
