@@ -126,6 +126,12 @@ def test_run_calculation(mock_db_service, client, auth_header):
     mock_db = mock_db_service.return_value.__enter__.return_value
 
     mock_db.insert_record.return_value = 1  # new record ID
+    mock_db.execute_query.return_value = [
+        {"balance": "18.35"},
+    ]
+    mock_db.fetch_records.return_value = [
+        {"id": 1, "type": "addition", "cost": "0.1"}
+    ]
 
     calculation_request = {
         "operation": "addition",
@@ -135,6 +141,7 @@ def test_run_calculation(mock_db_service, client, auth_header):
     response = client.post(
         "/api/v1/calculations/new",
         json=calculation_request,
+        headers=auth_header,
     )
 
     assert response.status_code == 200
