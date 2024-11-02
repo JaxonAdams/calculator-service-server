@@ -108,13 +108,14 @@ def run_calculation():
         except pymysql.MySQLError as e:
             return jsonify({"error": f"{e.args[1]}"})
 
-        if float(user_balance) <= 0:
-            return jsonify({"error": "Insufficient funds"}), 402
-
         try:
             op_info = db.fetch_records("operation", conditions={"type": op_type})[0]
         except IndexError:
             return jsonify({"error": f"Operation '{op_type}' not known"}), 400
+
+        new_user_balance = round(float(user_balance) - float(op_info["cost"]), 2)
+        if new_user_balance <= 0:
+            return jsonify({"error": "Insufficient funds"}), 402
 
         try:
             result = CalculatorService().calculate(op_info["id"], operands)
@@ -135,7 +136,7 @@ def run_calculation():
                 "operation_id": op_info["id"],
                 "user_id": user_id,
                 "amount": 1,
-                "user_balance": user_balance,  # TODO: DECREMENT BALANCE!!
+                "user_balance": new_user_balance,
                 "operation_response": json.dumps(response_data),
             }
         )
