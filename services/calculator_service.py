@@ -2,7 +2,6 @@ import math
 from functools import reduce
 
 
-# TODO: WRITE SOME UNIT TESTS FOR ME
 class CalculatorService:
 
     def __init__(self):
@@ -28,14 +27,18 @@ class CalculatorService:
     def _subtract(self, *args):
 
         if not all(isinstance(arg, int) or isinstance(arg, float) for arg in args):
-            raise ValueError("'Subtraction' operation accepts only number-type operands.")
+            raise ValueError(
+                "'Subtraction' operation accepts only number-type operands."
+            )
 
         return reduce(lambda a, b: a - b, args)
 
     def _multiply(self, *args):
 
         if not all(isinstance(arg, int) or isinstance(arg, float) for arg in args):
-            raise ValueError("'Multiplication' operation accepts only number-type operands.")
+            raise ValueError(
+                "'Multiplication' operation accepts only number-type operands."
+            )
 
         return reduce(lambda a, b: a * b, args)
 
@@ -57,7 +60,7 @@ class CalculatorService:
         return math.sqrt(args[0])
 
     def _random_string(self, *args):
-        
+
         raise NotImplementedError("Operation 'random_string' not yet implemented")
 
     def calculate(self, operation_key: int, operands: list):
@@ -68,4 +71,3 @@ class CalculatorService:
             )
 
         return self.operation_map[operation_key](*operands)
-        
