@@ -233,8 +233,9 @@ def delete_record(record_id):
                 r.id   AS id,
                 o.cost AS cost
             FROM record r
+            JOIN user u ON u.id = r.user_id
             JOIN operation o ON o.id = r.operation_id
-            WHERE r.id > {record_id}
+            WHERE r.id > {record_id} AND u.id = {to_delete[0]['user_id']} 
             """
 
             to_update = db.execute_query(remaining_tx_sql)
