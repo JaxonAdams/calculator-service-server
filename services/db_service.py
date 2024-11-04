@@ -91,20 +91,54 @@ class DBService:
 
             return cursor.lastrowid
 
-    def fetch_records(self, table, fields=["*"], conditions=None):
+    def fetch_records(
+        self,
+        table,
+        fields=["*"],
+        conditions=None,
+        limit=None,
+        offset=None,
+        order_by=None,
+    ):
         """Fetch records from a specified table with optional conditions."""
 
         condition_str = ""
-        params = tuple()
+        params = []
 
         if conditions:
             condition_str = " WHERE " + " AND ".join(
                 f"{k}=%s" for k in conditions.keys()
             )
-            params = tuple(conditions.values())
+            params.extend(conditions.values())
 
         fields_str = ", ".join(f"`{f}`" if f != "*" else f for f in fields)
 
         query = f"SELECT {fields_str} FROM {table}{condition_str}"
 
-        return self.execute_query(query, params)
+        if order_by:
+            query += f" ORDER BY {order_by}"
+
+        if limit is not None:
+            query += " LIMIT %s"
+            params.append(limit)
+
+        if offset is not None:
+            query += " OFFSET %s"
+            params.append(offset)
+
+        return self.execute_query(query, tuple(params))
+
+    def count_records(self, table, conditions=None):
+        query = f"SELECT COUNT(*) FROM {table}"
+        params = []
+
+        if conditions:
+            condition_str = " WHERE " + " AND ".join(
+                f"{k}=%s" for k in conditions.keys()
+            )
+            params.extend(conditions.values())
+
+            query += condition_str
+
+        result = self.execute_query(query, tuple(params))
+        return result[0]["COUNT(*)"] if result else 0
