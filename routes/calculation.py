@@ -87,7 +87,7 @@ def run_calculation():
         op_type = data["operation"]
         operands = data["operands"]
     except KeyError as e:
-        return jsonify({"error": f"Field '{e}' is required"}), 400
+        return jsonify({"error": f"Field {e} is required"}), 400
 
     user_token = request.headers["Authorization"].split(" ")[1]
     user_id = JWTService().verify_token(user_token)["user_id"]
@@ -138,7 +138,7 @@ def run_calculation():
                 "amount": 1,
                 "user_balance": new_user_balance,
                 "operation_response": json.dumps(response_data),
-            }
+            },
         )
 
     return jsonify(response_data), 200

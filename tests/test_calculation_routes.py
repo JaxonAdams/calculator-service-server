@@ -40,9 +40,11 @@ def test_get_previous_calculations(mock_db_service, client, auth_header):
             "user_id": 1,
             "username": "test.user@example.com",
             "user_status": "active",
-            "calculation": json.dumps({"operation": "multiplication", "operands": [2, 2, 3], "result": 12}),
+            "calculation": json.dumps(
+                {"operation": "multiplication", "operands": [2, 2, 3], "result": 12}
+            ),
             "user_balance": "24.65",
-            "date": "2024-11-02 12:45:00"
+            "date": "2024-11-02 12:45:00",
         },
         {
             "id": 1,
@@ -52,9 +54,11 @@ def test_get_previous_calculations(mock_db_service, client, auth_header):
             "user_id": 1,
             "username": "test.user@example.com",
             "user_status": "active",
-            "calculation": json.dumps({"operation": "addition", "operands": [21, 21], "result": 42}),
+            "calculation": json.dumps(
+                {"operation": "addition", "operands": [21, 21], "result": 42}
+            ),
             "user_balance": "24.9",
-            "date": "2024-11-02 12:42:00"
+            "date": "2024-11-02 12:42:00",
         },
     ]
 
@@ -71,9 +75,13 @@ def test_get_previous_calculations(mock_db_service, client, auth_header):
                 "username": "test.user@example.com",
                 "status": "active",
             },
-            "calculation": {"operation": "multiplication", "operands": [2, 2, 3], "result": 12},
+            "calculation": {
+                "operation": "multiplication",
+                "operands": [2, 2, 3],
+                "result": 12,
+            },
             "user_balance": "24.65",
-            "date": "2024-11-02 12:45:00"
+            "date": "2024-11-02 12:45:00",
         },
         {
             "id": 1,
@@ -87,9 +95,13 @@ def test_get_previous_calculations(mock_db_service, client, auth_header):
                 "username": "test.user@example.com",
                 "status": "active",
             },
-            "calculation": {"operation": "addition", "operands": [21, 21], "result": 42},
+            "calculation": {
+                "operation": "addition",
+                "operands": [21, 21],
+                "result": 42,
+            },
             "user_balance": "24.9",
-            "date": "2024-11-02 12:42:00"
+            "date": "2024-11-02 12:42:00",
         },
     ]
 
@@ -129,9 +141,7 @@ def test_run_calculation(mock_db_service, client, auth_header):
     mock_db.execute_query.return_value = [
         {"balance": "18.35"},
     ]
-    mock_db.fetch_records.return_value = [
-        {"id": 1, "type": "addition", "cost": "0.1"}
-    ]
+    mock_db.fetch_records.return_value = [{"id": 1, "type": "addition", "cost": "0.1"}]
 
     calculation_request = {
         "operation": "addition",
@@ -147,3 +157,94 @@ def test_run_calculation(mock_db_service, client, auth_header):
     assert response.status_code == 200
     json_data = response.get_json()
     assert json_data == {"operation": "addition", "operands": [1, 3, 2], "result": 6}
+
+
+@patch("routes.calculation.DBService")
+def test_run_calc_insufficient_funds(mock_db_service, client, auth_header):
+
+    mock_db = mock_db_service.return_value.__enter__.return_value
+    mock_db.execute_query.return_value = [
+        {"balance": "0.05"},
+    ]
+    mock_db.fetch_records.return_value = [{"id": 1, "type": "addition", "cost": "0.1"}]
+
+    calculation_request = {
+        "operation": "addition",
+        "operands": [1, 3, 2],
+    }
+
+    response = client.post(
+        "/api/v1/calculations/new",
+        json=calculation_request,
+        headers=auth_header,
+    )
+
+    assert response.status_code == 402
+    json_data = response.get_json()
+    assert json_data == {"error": "Insufficient funds"}
+
+
+@patch("routes.calculation.DBService")
+def test_run_calc_unknown_op(mock_db_service, client, auth_header):
+
+    mock_db = mock_db_service.return_value.__enter__.return_value
+    mock_db.execute_query.return_value = [
+        {"balance": "0.05"},
+    ]
+
+    mock_db.fetch_records.return_value = []
+
+    calculation_request = {
+        "operation": "modulo",
+        "operands": [7, 2],
+    }
+
+    response = client.post(
+        "/api/v1/calculations/new",
+        json=calculation_request,
+        headers=auth_header,
+    )
+
+    assert response.status_code == 400
+    json_data = response.get_json()
+    assert json_data == {"error": "Operation 'modulo' not known"}
+
+
+def test_run_calc_required_fields(client, auth_header):
+
+    calculation_request1 = {
+        "operation": "square_root",
+    }
+
+    response1 = client.post(
+        "/api/v1/calculations/new",
+        json=calculation_request1,
+        headers=auth_header,
+    )
+
+    assert response1.status_code == 400
+    assert response1.get_json() == {"error": "Field 'operands' is required"}
+
+    calculation_request2 = {
+        "operands": [1, 2, 3],
+    }
+
+    response2 = client.post(
+        "/api/v1/calculations/new",
+        json=calculation_request2,
+        headers=auth_header,
+    )
+
+    assert response2.status_code == 400
+    assert response2.get_json() == {"error": "Field 'operation' is required"}
+
+    calculation_request3 = {}
+
+    response3 = client.post(
+        "/api/v1/calculations/new",
+        json=calculation_request3,
+        headers=auth_header,
+    )
+
+    assert response3.status_code == 400
+    assert response3.get_json() == {"error": "Field 'operation' is required"}
