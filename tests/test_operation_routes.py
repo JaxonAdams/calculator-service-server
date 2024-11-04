@@ -69,15 +69,22 @@ def test_get_operations(mock_db_service, client, auth_header):
         {"id": 6, "type": "random_string", "cost": 1.0},
     ]
 
+    mock_db_service.return_value.__enter__.return_value.count_records.return_value = 6
+
     mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = (
         mock_operations
     )
+    expected_metadata = {
+        "total": 6,
+        "page": 1,
+        "page_size": 10,
+    }
 
     response = client.get("/api/v1/operations", headers=auth_header)
 
     assert response.status_code == 200
     json_data = response.get_json()
-    assert json_data == {"results": mock_operations}
+    assert json_data == {"results": mock_operations, "metadata": expected_metadata}
 
 
 @patch("routes.operation.DBService")

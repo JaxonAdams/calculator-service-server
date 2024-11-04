@@ -105,15 +105,22 @@ def test_get_previous_calculations(mock_db_service, client, auth_header):
         },
     ]
 
-    mock_db_service.return_value.__enter__.return_value.execute_query.return_value = (
-        mock_calculations
-    )
+    expected_metadata = {
+        "total": 2,
+        "page": 1,
+        "page_size": 10,
+    }
+
+    mock_db_service.return_value.__enter__.return_value.execute_query.side_effect = [
+        [{"total": 2}],
+        mock_calculations,
+    ]
 
     response = client.get("/api/v1/calculations", headers=auth_header)
 
     assert response.status_code == 200
     json_data = response.get_json()
-    assert json_data == {"results": formatted_results}
+    assert json_data == {"results": formatted_results, "metadata": expected_metadata}
 
 
 def test_run_calculation_is_protected(client):
