@@ -12,14 +12,42 @@ operation_bp = Blueprint("operation", __name__)
 @operation_bp.route("/", methods=["GET"])
 @jwt_required
 def get_operations():
+
+    # handle pagination
+    limit = int(request.args.get("page_size", 10))
+    offset = (int(request.args.get("page", 1)) - 1) * limit
+
+    filters = {}
+    for param in ["type", "cost"]:  # filterable fields
+        value = request.args.get(param)
+        if value:
+            filters[param] = value
+
     with DBService() as db:
+
+        total_count = db.count_records(
+            "operation",
+            conditions={"deleted": 0} | filters,
+        )
+
         ops = db.fetch_records(
             "operation",
             fields=["id", "type", "cost"],
-            conditions={"deleted": 0},
+            conditions={"deleted": 0} | filters,
+            limit=limit,
+            offset=offset,
         )
 
-    return jsonify({"results": ops}), 200
+    response = {
+        "results": ops,
+        "metadata": {
+            "total": total_count,
+            "page": offset // limit + 1,
+            "page_size": limit,
+        },
+    }
+
+    return jsonify(response), 200
 
 
 @operation_bp.route("", methods=["POST"])

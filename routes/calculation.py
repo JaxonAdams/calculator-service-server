@@ -18,9 +18,31 @@ def get_calculation_history():
     user_token = request.headers["Authorization"].split(" ")[1]
     user_id = JWTService().verify_token(user_token)["user_id"]
 
+    limit = int(request.args.get("page_size", 10))
+    offset = (int(request.args.get("page", 1)) - 1) * limit
+
     date_format = "%Y-%m-%d %H:%i:%s"
 
-    get_history_sql = """
+    operation_type = request.args.get("operation_type")
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+
+    where_clause = "WHERE u.id = %s"
+    filters = [user_id]
+
+    if operation_type:
+        where_clause += " AND o.`type` = %s"
+        filters.append(operation_type)
+
+    if start_date:
+        where_clause += " AND r.`date` >= %s"
+        filters.append(start_date)
+
+    if end_date:
+        where_clause += " AND r.`date` <= %s"
+        filters.append(end_date)
+
+    get_history_sql = f"""
     SELECT
         r.id                      AS 'id',
         o.id                      AS 'operation_id',
@@ -35,13 +57,34 @@ def get_calculation_history():
     FROM record r
     LEFT JOIN operation o ON o.id = r.operation_id
     LEFT JOIN user u ON u.id = r.user_id
-    WHERE u.id = %s
-    ORDER BY r.`date` DESC;
+    {where_clause}
+    ORDER BY r.`date` DESC
+    LIMIT %s
+    OFFSET %s;
+    """
+
+    get_history_count_sql = f"""
+    SELECT
+        COUNT(*) AS total
+    FROM record r
+    LEFT JOIN operation o ON o.id = r.operation_id
+    LEFT JOIN user u ON u.id = r.user_id
+    {where_clause}
+    LIMIT 1;
     """
 
     try:
         with DBService() as db:
-            results = db.execute_query(get_history_sql, (date_format, user_id))
+            total_count_results = db.execute_query(
+                get_history_count_sql,
+                tuple(filters),
+            )
+            total_count = total_count_results[0]["total"]
+
+            results = db.execute_query(
+                get_history_sql,
+                tuple([date_format] + filters + [limit, offset]),
+            )
     except pymysql.MySQLError as e:
         return jsonify({"error": f"{e.args[1]}"})
 
@@ -74,7 +117,16 @@ def get_calculation_history():
 
         user_history.append(history_item)
 
-    return jsonify({"results": user_history}), 200
+    response = {
+        "results": user_history,
+        "metadata": {
+            "total": total_count,
+            "page": offset // limit + 1,
+            "page_size": limit,
+        },
+    }
+
+    return jsonify(response), 200
 
 
 @calculation_bp.route("/new", methods=["POST"])
