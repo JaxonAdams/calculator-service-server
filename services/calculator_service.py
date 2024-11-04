@@ -1,6 +1,8 @@
 import math
 from functools import reduce
 
+import requests
+
 
 class CalculatorService:
 
@@ -61,7 +63,39 @@ class CalculatorService:
 
     def _random_string(self, *args):
 
-        raise NotImplementedError("Operation 'random_string' not yet implemented")
+        if len(args) != 1 or not isinstance(args[0], dict):
+            raise ValueError(
+                "'Random String' accepts a single operand, a dictionary of options."
+            )
+
+        opts = args[0]
+        try:
+            string_len = opts["string_length"]
+            include_digits = opts["include_digits"]
+            include_uppercase_letters = opts["include_uppercase_letters"]
+            include_lowercase_letters = opts["include_lowercase_letters"]
+        except KeyError as e:
+            raise ValueError(
+                f"Field {e} is required in the settings dictionary (first operand)."
+            )
+
+        vendor_url = "https://www.random.org/strings"
+        params = {
+            "num": 1,
+            "len": string_len,
+            "digits": "on" if include_digits else "off",
+            "upperalpha": "on" if include_uppercase_letters else "off",
+            "loweralpha": "on" if include_lowercase_letters else "off",
+            "unique": "on",
+            "format": "plain",
+            "rnd": "new",
+        }
+
+        result = requests.get(vendor_url, params=params)
+        if "Error:" in result.text:
+            raise ValueError(result.text.split(":")[1].strip())
+
+        return result.text.strip()
 
     def calculate(self, operation_key: int, operands: list):
 
@@ -71,3 +105,16 @@ class CalculatorService:
             )
 
         return self.operation_map[operation_key](*operands)
+
+
+if __name__ == "__main__":
+    calc = CalculatorService()
+
+    random_str_opts = {
+        "string_length": 32,
+        "include_digits": True,
+        "include_uppercase_letters": True,
+        "include_lowercase_letters": False,
+    }
+
+    print(calc.calculate(6, [random_str_opts]))

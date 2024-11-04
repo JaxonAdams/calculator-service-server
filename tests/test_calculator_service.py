@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from services.calculator_service import CalculatorService
@@ -37,6 +39,7 @@ def test_addition_errors(calculator):
 
     with pytest.raises(ValueError):
         calculator.calculate(1, [7, "banana"])
+    with pytest.raises(ValueError):
         calculator.calculate(1, ["ape"])
 
 
@@ -64,6 +67,7 @@ def test_subtraction_errors(calculator):
 
     with pytest.raises(ValueError):
         calculator.calculate(2, [4, "Three", "banana"])
+    with pytest.raises(ValueError):
         calculator.calculate(2, ["hello"])
 
 
@@ -91,6 +95,7 @@ def test_multiplication_errors(calculator):
 
     with pytest.raises(ValueError):
         calculator.calculate(3, [4, "Three", "banana"])
+    with pytest.raises(ValueError):
         calculator.calculate(3, ["hello"])
 
 
@@ -115,6 +120,7 @@ def test_division_errors(calculator):
 
     with pytest.raises(ZeroDivisionError):
         calculator.calculate(4, [10, 0])
+    with pytest.raises(ZeroDivisionError):
         calculator.calculate(4, [100, 10, 0, 23])
 
     with pytest.raises(TypeError):
@@ -122,6 +128,7 @@ def test_division_errors(calculator):
 
     with pytest.raises(ValueError):
         calculator.calculate(4, [100, "Ten", "banana"])
+    with pytest.raises(ValueError):
         calculator.calculate(4, ["hello"])
 
 
@@ -132,7 +139,7 @@ def test_square_root(calculator):
     assert simple_res == 4
 
     another_res = calculator.calculate(5, [16.0])
-    assert simple_res == 4.0
+    assert another_res == 4.0
 
 
 def test_square_root_errors(calculator):
@@ -140,5 +147,58 @@ def test_square_root_errors(calculator):
 
     with pytest.raises(ValueError):
         calculator.calculate(5, [16, 9])
+    with pytest.raises(ValueError):
         calculator.calculate(5, ["rutabega"])
+    with pytest.raises(ValueError):
         calculator.calculate(5, [-9])
+
+
+@patch("services.calculator_service.requests.get")
+def test_random_string(mock_get, calculator):
+    # assumed random string has key/ID 6
+
+    expected_args = [
+        "https://www.random.org/strings",
+        {
+            "num": 1,
+            "len": 6,
+            "digits": "on",
+            "upperalpha": "on",
+            "loweralpha": "off",
+            "unique": "on",
+            "format": "plain",
+            "rnd": "new",
+        },
+    ]
+
+    mock_get.return_value.text = "ABC123"
+
+    random_opts = {
+        "string_length": 6,
+        "include_digits": True,
+        "include_uppercase_letters": True,
+        "include_lowercase_letters": False,
+    }
+
+    random_str = calculator.calculate(6, [random_opts])
+
+    assert isinstance(random_str, str)
+    assert len(random_str) == 6
+    mock_get.assert_called_once_with(expected_args[0], params=expected_args[1])
+
+
+def test_random_string_missing_opts(calculator):
+    # assumed random string has key/ID 6
+
+    random_opts = {
+        "include_digits": True,
+        "include_uppercase_letters": True,
+        "include_lowercase_letters": False,
+    }
+
+    with pytest.raises(ValueError) as e:
+        calculator.calculate(6, [random_opts])
+        assert (
+            str(e)
+            == "Field 'string_length' is required in the settings dictionary (first operand)."
+        )
