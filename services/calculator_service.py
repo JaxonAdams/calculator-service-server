@@ -95,7 +95,7 @@ class CalculatorService:
         if "Error:" in result.text:
             raise ValueError(result.text.split(":")[1].strip())
 
-        return result.text.strip().split("\n")
+        return result.text.strip()
 
     def calculate(self, operation_key: int, operands: list):
 
