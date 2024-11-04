@@ -8,11 +8,11 @@
 USE calculator_service;
 
 
-DELETE FROM operation;
 DELETE FROM record;
+DELETE FROM operation;
 
-ALTER TABLE operation AUTO_INCREMENT = 1;
 ALTER TABLE record AUTO_INCREMENT = 1;
+ALTER TABLE operation AUTO_INCREMENT = 1;
 
 
 -- Seed initial operations
@@ -30,13 +30,13 @@ VALUES
 
 
 -- Seed some dummy transactions for user ID 1
--- TODO: Update operation_response to match actual JSON response
 INSERT INTO record (
     `operation_id`,
     `user_id`,
     `amount`,
     `user_balance`,
-    `operation_response`
+    `operation_response`,
+    `date`
 )
 VALUES
     (
@@ -44,19 +44,22 @@ VALUES
         1,
         1,
         24.0,
-        JSON_OBJECT('status', 'success', 'result', 'ABC123')
+        JSON_OBJECT('operation', 'random_string', 'operands', JSON_ARRAY(), 'result', 'ABC123'),
+        TIMESTAMP('2024-11-02 12:30')
     ),
     (
         1,
         1,
         1,
         23.9,
-        JSON_OBJECT('status', 'success', 'result', 42)
+        JSON_OBJECT('operation', 'addition', 'operands', JSON_ARRAY(1, 2), 'result', 3),
+        TIMESTAMP('2024-11-02 12:33')
     ),
     (
         3,
         1,
         1,
         23.65,
-        JSON_OBJECT('status', 'success', 'result', 72520)
+        JSON_OBJECT('operation', 'multiplication', 'operands', JSON_ARRAY(21, 2), 'result', 42),
+        TIMESTAMP('2024-11-02 13:17')
     );
