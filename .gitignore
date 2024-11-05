@@ -1,5 +1,14 @@
+.vscode
+.idea
+
 .venv
 __pycache__
 
 sql/setup.sql
 sql/seed_user.sql
+
+.serverless
+.requirements
+node_modules
+
+.env
