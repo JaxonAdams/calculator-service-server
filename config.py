@@ -15,3 +15,6 @@ DB_PASSWORD = os.environ["DB_PASSWORD"]
 
 DB_DATABASE = "calculator_service"
 DB_PORT = 3306
+
+# OTHER SETTINGS
+USER_STARTING_BALANCE = 25.0

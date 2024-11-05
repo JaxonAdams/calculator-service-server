@@ -95,6 +95,7 @@ class DBService:
         self,
         table,
         fields=["*"],
+        join=[],
         conditions=None,
         limit=None,
         offset=None,
@@ -113,7 +114,12 @@ class DBService:
 
         fields_str = ", ".join(f"`{f}`" if f != "*" else f for f in fields)
 
-        query = f"SELECT {fields_str} FROM {table}{condition_str}"
+        join_str = ""
+        if len(join):
+            for to_join in join:
+                join_str += f" JOIN {to_join['table']} ON {to_join['left']} = {to_join['right']}"
+
+        query = f"SELECT {fields_str} FROM {table}{join_str}{condition_str}"
 
         if order_by:
             query += f" ORDER BY {order_by}"
