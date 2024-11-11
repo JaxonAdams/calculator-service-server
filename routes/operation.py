@@ -2,6 +2,7 @@ import pymysql
 from flask import Blueprint, jsonify, request
 
 from services.db_service import DBService
+from services.calculator_service import CalculatorService
 from services.jwt_service import jwt_required, admin_protected
 
 
@@ -38,8 +39,16 @@ def get_operations():
             offset=offset,
         )
 
+        ops_with_options = []
+        for op in ops:
+            ops_with_options.append(
+                op | {
+                    "options": CalculatorService().get_operation_options(op["id"])
+                }
+            )
+
     response = {
-        "results": ops,
+        "results": ops_with_options,
         "metadata": {
             "total": total_count,
             "page": offset // limit + 1,

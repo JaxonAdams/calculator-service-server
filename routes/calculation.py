@@ -3,6 +3,7 @@ import json
 import pymysql
 from flask import Blueprint, jsonify, request
 
+from config import USER_STARTING_BALANCE
 from services.db_service import DBService
 from services.jwt_service import JWTService, jwt_required, admin_protected
 from services.calculator_service import CalculatorService
@@ -159,6 +160,8 @@ def run_calculation():
             user_balance = db.execute_query(user_balance_sql)[0]["balance"]
         except pymysql.MySQLError as e:
             return jsonify({"error": f"{e.args[1]}"})
+        except IndexError:
+            user_balance = USER_STARTING_BALANCE
 
         try:
             op_info = db.fetch_records("operation", conditions={"type": op_type})[0]
@@ -235,7 +238,7 @@ def delete_record(record_id):
             FROM record r
             JOIN user u ON u.id = r.user_id
             JOIN operation o ON o.id = r.operation_id
-            WHERE r.id > {record_id} AND u.id = {to_delete[0]['user_id']} 
+            WHERE r.id > {record_id} AND u.id = {to_delete[0]['user_id']}  AND r.deleted = 0
             """
 
             to_update = db.execute_query(remaining_tx_sql)
