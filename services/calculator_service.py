@@ -19,12 +19,29 @@ class CalculatorService:
             6: self._random_string,
         }
 
+        self.operation_options = {
+            1: self._add_options,
+            2: self._subtract_options,
+            3: self._multiply_options,
+            4: self._divide_options,
+            5: self._sqrt_options,
+            6: self._random_string_options,
+        }
+
     def _add(self, *args):
 
         if not all(isinstance(arg, int) or isinstance(arg, float) for arg in args):
             raise ValueError("'Addition' operation accepts only number-type operands.")
 
         return sum(args)
+    
+    def _add_options(self):
+
+        return {
+            "operand_type": "number",
+            "operand_count": "variable",
+            "description": "Add any number of operands together.",
+        }
 
     def _subtract(self, *args):
 
@@ -34,6 +51,14 @@ class CalculatorService:
             )
 
         return reduce(lambda a, b: a - b, args)
+    
+    def _subtract_options(self):
+
+        return {
+            "operand_type": "number",
+            "operand_count": "variable",
+            "description": "Subtract any number of operands from the first operand.",
+        }
 
     def _multiply(self, *args):
 
@@ -43,6 +68,14 @@ class CalculatorService:
             )
 
         return reduce(lambda a, b: a * b, args)
+    
+    def _multiply_options(self):
+
+        return {
+            "operand_type": "number",
+            "operand_count": "variable",
+            "description": "Multiply any number of operands together.",
+        }
 
     def _divide(self, *args):
 
@@ -50,6 +83,14 @@ class CalculatorService:
             raise ValueError("'Division' operation accepts only number-type operands.")
 
         return reduce(lambda a, b: a / b, args)
+    
+    def _divide_options(self):
+
+        return {
+            "operand_type": "number",
+            "operand_count": "variable",
+            "description": "Divide the first operand by all subsequent operands.",
+        }
 
     def _sqrt(self, *args):
 
@@ -60,6 +101,14 @@ class CalculatorService:
             raise ValueError("'Square Root' operand must be a number.")
 
         return math.sqrt(args[0])
+    
+    def _sqrt_options(self):
+
+        return {
+            "operand_type": "number",
+            "operand_count": 1,
+            "description": "Calculate the square root of the operand.",
+        }
 
     def _random_string(self, *args):
 
@@ -96,6 +145,32 @@ class CalculatorService:
             raise ValueError(result.text.split(":")[1].strip())
 
         return result.text.strip()
+    
+    def _random_string_options(self):
+            
+        return {
+            "operand_type": "dictionary",
+            "operand_count": 1,
+            "description": "Generate a random string based on the provided options.",
+            "options": {
+                "string_length": {
+                    "type": "int",
+                    "description": "The length of the random string to generate.",
+                },
+                "include_digits": {
+                    "type": "bool",
+                    "description": "Include digits (0-9) in the random string.",
+                },
+                "include_uppercase_letters": {
+                    "type": "bool",
+                    "description": "Include uppercase letters (A-Z) in the random string.",
+                },
+                "include_lowercase_letters": {
+                    "type": "bool",
+                    "description": "Include lowercase letters (a-z) in the random string.",
+                },
+            },
+        }
 
     def calculate(self, operation_key: int, operands: list):
 
@@ -105,6 +180,15 @@ class CalculatorService:
             )
 
         return self.operation_map[operation_key](*operands)
+    
+    def get_operation_options(self, operation_key: int):
+
+        if operation_key not in self.operation_options:
+            raise NotImplementedError(
+                f"Operation with ID '{operation_key}' not yet implemented"
+            )
+
+        return self.operation_options[operation_key]()
 
 
 if __name__ == "__main__":
