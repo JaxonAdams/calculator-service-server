@@ -17,14 +17,13 @@ CORS(
     app,
     origins=cors_origins,
     allow_headers=["Content-Type", "Authorization"],
-    methods=["GET", "POST", "OPTIONS"],
+    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 )
 
 router = Router(app)
 router.init()
 
 
-# TODO: move error methods to a place that makes more sense
 @app.errorhandler(401)
 def unauthorized_error(error):
     return jsonify({"error": "Unauthorized"}), 401
