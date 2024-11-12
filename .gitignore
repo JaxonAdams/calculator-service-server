@@ -3,6 +3,7 @@
 
 .venv
 __pycache__
+.pytest_cache
 
 sql/setup.sql
 sql/seed_user.sql

@@ -74,6 +74,88 @@ def test_get_operations(mock_db_service, client, auth_header):
     mock_db_service.return_value.__enter__.return_value.fetch_records.return_value = (
         mock_operations
     )
+
+    expected_results = [
+        {
+            "id": 1,
+            "type": "addition",
+            "cost": 0.1,
+            "options": {
+                "operand_type": "number",
+                "operand_count": "variable",
+                "description": "Add any number of operands together.",
+            }
+        },
+        {
+            "id": 2,
+            "type": "subtraction",
+            "cost": 0.1,
+            "options": {
+                "operand_type": "number",
+                "operand_count": "variable",
+                "description": "Subtract any number of operands from the first operand.",
+            }
+        },
+        {
+            "id": 3,
+            "type": "multiplication",
+            "cost": 0.25,
+            "options": {
+                "operand_type": "number",
+                "operand_count": "variable",
+                "description": "Multiply any number of operands together.",
+            }
+        },
+        {
+            "id": 4,
+            "type": "division",
+            "cost": 0.25,
+            "options": {
+                "operand_type": "number",
+                "operand_count": "variable",
+                "description": "Divide the first operand by all subsequent operands.",
+            }
+        },
+        {
+            "id": 5,
+            "type": "square_root",
+            "cost": 0.75,
+            "options": {
+                "operand_type": "number",
+                "operand_count": 1,
+                "description": "Calculate the square root of the operand.",
+            }
+        },
+        {
+            "id": 6,
+            "type": "random_string",
+            "cost": 1.0,
+            "options": {
+                "operand_type": "dictionary",
+                "operand_count": 1,
+                "description": "Generate a random string based on the provided options.",
+                "options": {
+                    "string_length": {
+                        "type": "int",
+                        "description": "The length of the random string to generate.",
+                    },
+                    "include_digits": {
+                        "type": "bool",
+                        "description": "Include digits (0-9) in the random string.",
+                    },
+                    "include_uppercase_letters": {
+                        "type": "bool",
+                        "description": "Include uppercase letters (A-Z) in the random string.",
+                    },
+                    "include_lowercase_letters": {
+                        "type": "bool",
+                        "description": "Include lowercase letters (a-z) in the random string.",
+                    },
+                },
+            }
+        },
+    ]
+
     expected_metadata = {
         "total": 6,
         "page": 1,
@@ -84,7 +166,7 @@ def test_get_operations(mock_db_service, client, auth_header):
 
     assert response.status_code == 200
     json_data = response.get_json()
-    assert json_data == {"results": mock_operations, "metadata": expected_metadata}
+    assert json_data == {"results": expected_results, "metadata": expected_metadata}
 
 
 @patch("routes.operation.DBService")
