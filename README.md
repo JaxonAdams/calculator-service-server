@@ -307,6 +307,36 @@ Status codes:
  - `200` - The operation was successfully deleted
  - `404` - Operation not found
 
+### User API
+
+#### `GET /users/balance`
+
+Retrieve your current balance from the server.
+
+Sample response:
+```JSON
+{
+  "balance": "13.40"
+}
+```
+
+#### `GET /users/<user_id>/balance`
+
+Retrieve the balance of any user specified by the user ID.
+
+An administrator token is required to access this endpoint.
+
+Status codes:
+ - `200` - The user's balance was successfully retrieved
+ - `404` - User not found
+
+Sample response:
+```JSON
+{
+  "balance": "13.40"
+}
+```
+
 -----
 
 ## Setup
