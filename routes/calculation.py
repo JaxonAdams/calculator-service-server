@@ -106,7 +106,7 @@ def get_calculation_history():
                 tuple([date_format] + filters + [limit, offset]),
             )
     except pymysql.MySQLError as e:
-        return jsonify({"error": f"{e.args[1]}"})
+        return jsonify({"error": f"{e.args[1]}"}), 400
 
     # Format the results for the response
     user_history = []
