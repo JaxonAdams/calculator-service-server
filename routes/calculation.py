@@ -9,6 +9,8 @@ from services.jwt_service import JWTService, jwt_required, admin_protected
 from services.calculator_service import CalculatorService
 
 
+# Create a Blueprint for calculation routes. This blueprint will be registered
+# later to make these routes available to the app.
 calculation_bp = Blueprint("calculation", __name__)
 
 
@@ -16,18 +18,29 @@ calculation_bp = Blueprint("calculation", __name__)
 @calculation_bp.route("/", methods=["GET"])
 @jwt_required
 def get_calculation_history():
+    """Retrieve the calculation history for the authenticated user.
+    
+    This endpoint requires a valid user JWT token in the Authorization header.
+    Supports filtering by operation type, start date, and end date.
+    Supports pagination with 'page' and 'page_size' query parameters.
+
+    Returns:
+        Response: JSON response with the calculation history for the authenticated user.
+    """
+
+    # Extract the user ID from the provided JWT token
     user_token = request.headers["Authorization"].split(" ")[1]
     user_id = JWTService().verify_token(user_token)["user_id"]
 
+    # Extract query parameters for filtering and pagination
     limit = int(request.args.get("page_size", 10))
     offset = (int(request.args.get("page", 1)) - 1) * limit
-
-    date_format = "%Y-%m-%d %H:%i:%s"
 
     operation_type = request.args.get("operation_type")
     start_date = request.args.get("start_date")
     end_date = request.args.get("end_date")
 
+    # Prepare the SQL query to retrieve the calculation history
     where_clause = "WHERE u.id = %s AND r.deleted = 0"
     filters = [user_id]
 
@@ -43,6 +56,10 @@ def get_calculation_history():
         where_clause += " AND r.`date` <= %s"
         filters.append(end_date)
 
+    # Return dates from the database in this format:
+    date_format = "%Y-%m-%d %H:%i:%s"
+
+    # Query for fetching the user's calculation history
     get_history_sql = f"""
     SELECT
         r.id                      AS 'id',
@@ -64,6 +81,7 @@ def get_calculation_history():
     OFFSET %s;
     """
 
+    # Query for fetching the total count of the user's calculation history
     get_history_count_sql = f"""
     SELECT
         COUNT(*) AS total
@@ -74,6 +92,7 @@ def get_calculation_history():
     LIMIT 1;
     """
 
+    # Fetch the calculation history and total count from the database
     try:
         with DBService() as db:
             total_count_results = db.execute_query(
@@ -89,11 +108,12 @@ def get_calculation_history():
     except pymysql.MySQLError as e:
         return jsonify({"error": f"{e.args[1]}"})
 
+    # Format the results for the response
     user_history = []
     for result in results:
         history_item = dict(result)  # making a copy, not modifying in-place
 
-        # apply additional formatting for certain fields
+        # Apply additional formatting for certain fields
         del history_item["operation_id"]
         del history_item["operation_type"]
         del history_item["operation_cost"]
@@ -118,6 +138,8 @@ def get_calculation_history():
 
         user_history.append(history_item)
 
+    # Construct the response with the calculation history and metadata
+
     response = {
         "results": user_history,
         "metadata": {
@@ -133,18 +155,31 @@ def get_calculation_history():
 @calculation_bp.route("/new", methods=["POST"])
 @jwt_required
 def run_calculation():
+    """Run a calculation operation for the authenticated user.
+    
+    Expects a JSON payload with 'operation' and 'operands' fields.
+    Returns a JSON response with the calculation result and updated user balance.
+
+    Returns:
+        Response: JSON response with the calculation result and updated user balance.
+        Response: JSON response with an error message and appropriate status code
+                  if the operation is not known or the user has insufficient funds
+    """
 
     data = request.get_json()
 
+    # Extract the operation type and operands from the request data
     try:
         op_type = data["operation"]
         operands = data["operands"]
     except KeyError as e:
         return jsonify({"error": f"Field {e} is required"}), 400
 
+    # Extract the user ID from the provided JWT token
     user_token = request.headers["Authorization"].split(" ")[1]
     user_id = JWTService().verify_token(user_token)["user_id"]
 
+    # Query to fetch the user's balance from the database
     user_balance_sql = f"""
     SELECT
         IFNULL(r.user_balance, 0) AS 'balance'
@@ -156,6 +191,7 @@ def run_calculation():
 
     with DBService() as db:
 
+        # Fetch the user's balance from the database
         try:
             user_balance = db.execute_query(user_balance_sql)[0]["balance"]
         except pymysql.MySQLError as e:
@@ -163,15 +199,19 @@ def run_calculation():
         except IndexError:
             user_balance = USER_STARTING_BALANCE
 
+        # Fetch the operation details from the database
         try:
             op_info = db.fetch_records("operation", conditions={"type": op_type})[0]
         except IndexError:
             return jsonify({"error": f"Operation '{op_type}' not known"}), 400
 
+        # Calculate the new user balance after the operation
         new_user_balance = round(float(user_balance) - float(op_info["cost"]), 2)
+        # Check if the user has sufficient funds for the operation
         if new_user_balance <= 0:
             return jsonify({"error": "Insufficient funds"}), 402
 
+        # Perform the calculation operation
         try:
             result = CalculatorService().calculate(op_info["id"], operands)
         except ValueError as e:
@@ -179,12 +219,14 @@ def run_calculation():
         except NotImplementedError as e:
             return jsonify({"error": str(e)}), 500
 
+        # Construct the response data with the operation details and result
         response_data = {
             "operation": op_type,
             "operands": operands,
             "result": result,
         }
 
+        # Store the calculation record in the database
         db.insert_record(
             "record",
             {
@@ -202,7 +244,23 @@ def run_calculation():
 @calculation_bp.route("/<int:record_id>", methods=["DELETE"])
 @admin_protected
 def delete_record(record_id):
+    """Delete a calculation record by ID.
+    
+    This endpoint requires a valid admin JWT token in the Authorization header.
+    Returns a JSON response with a message if the record was deleted successfully.
+
+    Args:
+        record_id (int): The ID of the calculation record to delete.
+    
+    Returns:
+        Response: JSON response with a message if the record was deleted successfully.
+        Response: JSON response with an error message and appropriate status code
+                  if the record was not found or could not be deleted.
+    """
+
     with DBService() as db:
+
+        # Fetch the calculation record to delete
         to_delete = db.fetch_records(
             "record",
             join=[
@@ -215,6 +273,7 @@ def delete_record(record_id):
             conditions={"record.id": record_id, "record.deleted": 0},
         )
 
+        # If the record was not found, return a 404 Not Found response
         if not to_delete or not len(to_delete):
             return (
                 jsonify(
@@ -223,6 +282,7 @@ def delete_record(record_id):
                 404,
             )
 
+        # Calculate the new user balance after deleting the record
         try:
             new_user_balance = to_delete[0]["user_balance"] + to_delete[0]["cost"]
             db.update_record(
@@ -231,6 +291,7 @@ def delete_record(record_id):
                 record_id,
             )
 
+            # We need to update the user balance on all subsequent records
             remaining_tx_sql = f"""
             SELECT
                 r.id   AS id,
@@ -244,6 +305,7 @@ def delete_record(record_id):
             to_update = db.execute_query(remaining_tx_sql)
             prev_balance = new_user_balance
 
+            # Update the user balance on all subsequent records
             if to_update:
                 for tx in to_update:
                     db.update_record(
@@ -257,11 +319,13 @@ def delete_record(record_id):
         except pymysql.MySQLError as e:
             return jsonify({"error": e.args[1]}), 400
 
+        # Check if the record was successfully deleted
         updated_records = db.fetch_records(
             "record",
             conditions={"id": record_id},
         )
 
+        # Return a response based on the deletion result
         try:
             if updated_records[0]["deleted"] == 1:
                 return (

@@ -5,13 +5,14 @@ from routes.calculation import calculation_bp
 
 
 class Router:
+    """Handles registering routes with the Flask app."""
 
     def __init__(self, flask_app):
 
         self.flask_app = flask_app
 
     def init(self):
-        # register routes
+        # Register routes on instantiation
 
         # auth-related routes
         self.flask_app.register_blueprint(
