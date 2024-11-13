@@ -9,6 +9,7 @@ from config import JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRATION_HOURS
 
 
 class JWTService:
+    """Service class for generating and verifying JWT tokens."""
 
     def __init__(
         self,
@@ -21,6 +22,8 @@ class JWTService:
         self.expiration_hours = expiration_hours
 
     def generate_token(self, user_id):
+        """Generate a JWT token for the provided user ID."""
+
         payload = {
             "user_id": user_id,
             "exp": datetime.now(UTC) + timedelta(hours=self.expiration_hours),
@@ -29,6 +32,7 @@ class JWTService:
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 
     def generate_admin_token(self, created_by, description):
+        """Generate a JWT token for an admin API key."""
 
         payload = {
             "role": "admin",
@@ -39,6 +43,8 @@ class JWTService:
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 
     def verify_token(self, token):
+        """Verify the provided token and return the decoded payload."""
+        
         try:
             return jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
         except jwt.ExpiredSignatureError:
@@ -48,6 +54,8 @@ class JWTService:
 
 
 def jwt_required(f):
+    """Decorator to require a valid user JWT token for a route."""
+    
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
         auth_header = request.headers.get("Authorization")
@@ -66,6 +74,8 @@ def jwt_required(f):
 
 
 def admin_protected(f):
+    """Decorator to require an admin API key for a route."""
+
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
         auth_header = request.headers.get("Authorization")

@@ -5,11 +5,12 @@ import requests
 
 
 class CalculatorService:
+    """The core calculator service that performs various operations."""
 
     def __init__(self):
 
-        # HEY DEVELOPERS -- IF YOU ADD A NEW OPERATION, ADD IT TO THE MAP
-        # otherwise it will not be accessible via the API
+        # HEY DEVELOPERS -- IF YOU ADD A NEW OPERATION, ADD IT TO THE MAP!
+        # Otherwise it will not be accessible via the API
         self.operation_map = {
             1: self._add,
             2: self._subtract,
@@ -29,6 +30,7 @@ class CalculatorService:
         }
 
     def _add(self, *args):
+        """Add any number of operands together."""
 
         if not all(isinstance(arg, int) or isinstance(arg, float) for arg in args):
             raise ValueError("'Addition' operation accepts only number-type operands.")
@@ -36,6 +38,7 @@ class CalculatorService:
         return sum(args)
     
     def _add_options(self):
+        """Return the options/settings for the 'Addition' operation."""
 
         return {
             "operand_type": "number",
@@ -44,6 +47,7 @@ class CalculatorService:
         }
 
     def _subtract(self, *args):
+        """Subtract any number of operands from the first operand."""
 
         if not all(isinstance(arg, int) or isinstance(arg, float) for arg in args):
             raise ValueError(
@@ -53,6 +57,7 @@ class CalculatorService:
         return reduce(lambda a, b: a - b, args)
     
     def _subtract_options(self):
+        """Return the options/settings for the 'Subtraction' operation."""
 
         return {
             "operand_type": "number",
@@ -61,6 +66,7 @@ class CalculatorService:
         }
 
     def _multiply(self, *args):
+        """Multiply any number of operands together."""
 
         if not all(isinstance(arg, int) or isinstance(arg, float) for arg in args):
             raise ValueError(
@@ -70,6 +76,7 @@ class CalculatorService:
         return reduce(lambda a, b: a * b, args)
     
     def _multiply_options(self):
+        """Return the options/settings for the 'Multiplication' operation."""
 
         return {
             "operand_type": "number",
@@ -78,6 +85,7 @@ class CalculatorService:
         }
 
     def _divide(self, *args):
+        """Divide the first operand by all subsequent operands."""
 
         if not all(isinstance(arg, int) or isinstance(arg, float) for arg in args):
             raise ValueError("'Division' operation accepts only number-type operands.")
@@ -85,6 +93,7 @@ class CalculatorService:
         return reduce(lambda a, b: a / b, args)
     
     def _divide_options(self):
+        """Return the options/settings for the 'Division' operation."""
 
         return {
             "operand_type": "number",
@@ -93,6 +102,7 @@ class CalculatorService:
         }
 
     def _sqrt(self, *args):
+        """Calculate the square root of the operand."""
 
         if len(args) != 1:
             raise ValueError("'Square Root' operation accepts only a single operand.")
@@ -103,6 +113,7 @@ class CalculatorService:
         return math.sqrt(args[0])
     
     def _sqrt_options(self):
+        """Return the options/settings for the 'Square Root' operation."""
 
         return {
             "operand_type": "number",
@@ -111,12 +122,20 @@ class CalculatorService:
         }
 
     def _random_string(self, *args):
+        """Generate a random string based on the provided options.
+        
+        Random string generation is powered by a light integration to
+        the random.org API. The API is used to generate a single random
+        string based on the provided options.
+        """
 
+        # Validate the request input
         if len(args) != 1 or not isinstance(args[0], dict):
             raise ValueError(
                 "'Random String' accepts a single operand, a dictionary of options."
             )
 
+        # Extract the options from the request
         opts = args[0]
         try:
             string_len = opts["string_length"]
@@ -128,6 +147,7 @@ class CalculatorService:
                 f"Field {e} is required in the settings dictionary (first operand)."
             )
 
+        # Generate the random string using the random.org API
         vendor_url = "https://www.random.org/strings"
         params = {
             "num": 1,
@@ -140,6 +160,7 @@ class CalculatorService:
             "rnd": "new",
         }
 
+        # Make the API request and check for errors
         result = requests.get(vendor_url, params=params)
         if "Error:" in result.text:
             raise ValueError(result.text.split(":")[1].strip())
@@ -147,6 +168,7 @@ class CalculatorService:
         return result.text.strip()
     
     def _random_string_options(self):
+        """Return the options/settings for the 'Random String' operation."""
             
         return {
             "operand_type": "dictionary",
@@ -173,6 +195,7 @@ class CalculatorService:
         }
 
     def calculate(self, operation_key: int, operands: list):
+        """Perform the requested calculation based on the provided operation key and operands."""
 
         if operation_key not in self.operation_map:
             raise NotImplementedError(
@@ -182,6 +205,7 @@ class CalculatorService:
         return self.operation_map[operation_key](*operands)
     
     def get_operation_options(self, operation_key: int):
+        """Return the options/settings for the requested operation."""
 
         if operation_key not in self.operation_options:
             raise NotImplementedError(
@@ -192,6 +216,8 @@ class CalculatorService:
 
 
 if __name__ == "__main__":
+    # Use this branch to test the calculator service locally
+
     calc = CalculatorService()
 
     random_str_opts = {
