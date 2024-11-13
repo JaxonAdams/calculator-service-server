@@ -128,7 +128,11 @@ def get_single_operation(operation_id):
 
     # Construct and return the response
     try:
-        return jsonify(ops[0]), 200
+        return jsonify(
+            ops[0] | {
+                "options": CalculatorService().get_operation_options(ops[0]["id"])
+            }
+        ), 200
     except IndexError:
         return (
             jsonify({"error": f"Operation with ID {operation_id} not found"}),

@@ -66,12 +66,12 @@ Fields included in the response:
 
 ### Calculation API
 
-#### `GET /calculation`
+#### `GET /calculations`
 
 Retrieve your calculation history. This endpoint supports filtering by operation type, start date, and end date. It also supports pagination with 'page' and 'page_size' query parameters.
 
 Sample request:
-`GET /calculation?type=multiplication&start_date=2024-11-11&page=2&page_size=5`
+`GET /calculations?type=multiplication&start_date=2024-11-11&page=2&page_size=5`
 
 The above URL requests the second page of your calculation history for all "multiplication" operations on or after November 11, 2024. It specifies a page size of 5 records per-page.
 
@@ -137,7 +137,7 @@ Sample response:
 }
 ```
 
-#### `POST /calculation/new`
+#### `POST /calculations/new`
 
 Request a new calculation from the server. For more information on available operations and their required operand settings, send a request to `GET /operations`.
 
@@ -171,15 +171,141 @@ Sample response:
 }
 ```
 
-#### `DELETE /calculation/<record_id>`
+#### `DELETE /calculations/<record_id>`
 
-Delete a calculation record by ID, removing it from the user's history and increasing the user's balance.
+Delete a calculation record by ID, removing it from the user's history and increasing the user's balance. This performs a soft-delete for easy recovery.
 
 This route is not available to an ordinary user -- you need an administrator API key.
 
 Status codes:
  - `200` - The calculation record was successfully deleted.
  - `404` - The calculation with the provided ID could not be found.
+
+### Operation API
+
+#### `GET /oprations`
+
+Get all available operations, along with 'options' (or settings and requirements) for requesting a calculation. This endpoint supports filtering by type and cost. It also supports pagination with 'page' and 'page_size' query parameters.
+
+Sample request:
+`GET /operations?cost=0.1&page_size=5`
+
+The above URL requests all available operations which cost 10 cents, with a page size of 5 operations per-page.
+
+Status codes:
+ - `200` - Success
+ - `400` - Client-error -- check your query string
+
+Sample response:
+```JSON
+{
+  "metadata": {
+    "page": 1,
+    "page_size": 10,
+    "total": 2
+  },
+  "results": [
+    {
+      "cost": "0.25",
+      "id": 3,
+      "options": {
+        "description": "Multiply any number of operands together.",
+        "operand_count": "variable",
+        "operand_type": "number"
+      },
+      "type": "multiplication"
+    },
+    {
+      "cost": "0.25",
+      "id": 4,
+      "options": {
+        "description": "Divide the first operand by all subsequent operands.",
+        "operand_count": "variable",
+        "operand_type": "number"
+      },
+      "type": "division"
+    }
+  ]
+}
+```
+
+#### `POST /operations`
+
+Add a new operation to the database. Note that using this endpoint isn't the only step required for adding new operation support to the calculator. This endpoint is made available to administrators to simplify the process of adding a new operation.
+
+This endpoint requires an administrator token.
+
+Required fields:
+ - `type` - The type of operation, e.g. the operator
+ - `cost` - The cost in dollars of performing the operation
+
+Sample request:
+```JSON
+{
+    "type": "modulo",
+    "cost": 0.3
+}
+```
+
+Status codes:
+ - `201` - The operation was added to the database successfully
+ - `400` - User error -- check your request body
+
+Sample response:
+```JSON
+{
+  "id": 7,
+  "type": "modulo",
+  "cost": 0.3
+}
+```
+
+#### `GET /operations/<operation_id>`
+
+Get a single operation by ID.
+
+Status codes:
+ - `200` - Success
+ - `404` - Operation not found
+
+Sample response:
+```JSON
+{
+  "cost": "0.10",
+  "id": 1,
+  "options": {
+    "description": "Add any number of operands together.",
+    "operand_count": "variable",
+    "operand_type": "number"
+  },
+  "type": "addition"
+}
+```
+
+#### `PUT /operations/<operation_id>`
+
+Update a single operation by ID. At least one of the following fields is required:
+ - `type` - The operation type, e.g. the operand
+ - `cost` - The cost of the operation
+
+This is particularly useful for updating the costs of various calculator operations.
+
+An administrator token is required to access this endpoint.
+
+Status codes:
+ - `200` - The operation was successfully updated
+ - `400` - Invalid request
+ - `404` - Operation not found
+
+#### `DELETE /operations/<operation_id>`
+
+Delete an operation from the database. This performs a soft-delete for easy recovery.
+
+An administrator token is required to access this endpoint.
+
+Status codes:
+ - `200` - The operation was successfully deleted
+ - `404` - Operation not found
 
 -----
 
