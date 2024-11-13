@@ -4,11 +4,12 @@
 
 1. [Project Overview](#project-overview)
 2. [Prerequisites](#prerequisites)
-3. [API Documentation](#api-documentation)
-4. [Setup](#setup)
-5. [Running the Service Locally](#running-the-service-locally)
-6. [Running Tests](#running-tests)
-7. [Deployment](#deployment)
+3. [Test Credentials](#test-credentials)
+4. [API Documentation](#api-documentation)
+5. [Setup](#setup)
+6. [Running the Service Locally](#running-the-service-locally)
+7. [Running Tests](#running-tests)
+8. [Deployment](#deployment)
 
 -----
 
@@ -27,6 +28,16 @@ This repository hosts the server side of the project. You can find the client si
  - Python 3.12
  - MySQL
  - Node.js and npm (for Serverless framework)
+
+-----
+
+## Test Credentials
+
+If you'd like to test out my app, you can do so with the following login credentials for a test user:
+```
+test.user@example.com
+HELLO-pw123~!
+```
 
 -----
 
