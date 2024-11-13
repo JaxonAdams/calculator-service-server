@@ -16,7 +16,7 @@
 
 This project is a calculator service that performs various operations and provides an API for accessing these operations. The service is built using Flask and integrates with a MySQL database.
 
-The calculator uses a transaction-based system wherin a user starts with a certain balance, and requesting operations decreases that balance.
+The calculator uses a transaction-based system wherein a user starts with a certain balance, and requesting operations decreases that balance.
 
 This repository hosts the server side of the project. You can find the client side [here](https://github.com/JaxonAdams/calculator-service-client).
 
